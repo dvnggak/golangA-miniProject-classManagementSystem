@@ -37,6 +37,12 @@ type Admin struct {
 	Password string `form:"password" json:"password"`
 }
 
+type AdminResponse struct {
+	Username string `json:"name" form:"name"`
+	Message  string `json:"message" form:"message"`
+	Token    string `json:"token" form:"token"`
+}
+
 type User struct {
 	gorm.Model
 	ID_number    int           `form:"id_number" json:"id_number"`
@@ -66,4 +72,9 @@ func (a *Admin) BeforeCreateAdmin(tx *gorm.DB) (err error) {
 	a.Password = hashPassword
 
 	return
+}
+
+func (a *Admin) ComparePassword(password string) string {
+	utils.ComparePassword(a.Password, password)
+	return a.Password
 }

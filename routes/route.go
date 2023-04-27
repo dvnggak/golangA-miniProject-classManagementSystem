@@ -11,13 +11,13 @@ func StartRoute() *echo.Echo {
 	adminController := controller.Controller{}
 	adminGroup := e.Group("/admins")
 	adminGroup.POST("/", adminController.CreateAdmin)
-
-	adminGroup.GET("/", adminController.GetAdmin)
+	adminGroup.POST("/login", adminController.LoginAdmin)
 
 	userController := controller.Controller{}
 	userGroup := e.Group("/users")
 	userGroup.POST("/", userController.CreateUser)
 
+	adminGroup.GET("/", adminController.GetAdmin)
 	userGroup.GET("/", userController.GetUser)
 
 	return e

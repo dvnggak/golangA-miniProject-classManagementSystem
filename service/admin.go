@@ -1,12 +1,17 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/dvnggak/miniProject/config"
 	"github.com/dvnggak/miniProject/model"
+	"gorm.io/gorm"
 )
 
 type IAdminService interface {
 	CreateAdmin(*model.Admin) error
+	LoginAdmin(*model.Admin) error
+	GetAdminByUsername(string) (*model.Admin, error)
 }
 
 type AdminRepository struct {
@@ -38,4 +43,25 @@ func (u *AdminRepository) CreateAdmin(admin *model.Admin) error {
 	}
 
 	return nil
+}
+
+func (u *AdminRepository) LoginAdmin(admin *model.Admin) error {
+	password := admin.ComparePassword(admin.Password)
+	err := config.DBMysql.Where("username = ? && password = ?", admin.Username, password).First(&admin).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *AdminRepository) GetAdminByUsername(username string) (*model.Admin, error) {
+	var admin model.Admin
+	if err := config.DBMysql.Where("username = ?", username).First(&admin).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errors.New("admin not found")
+		}
+		return nil, err
+	}
+	return &admin, nil
 }
