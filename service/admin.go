@@ -10,7 +10,6 @@ import (
 
 type IAdminService interface {
 	CreateAdmin(*model.Admin) error
-	LoginAdmin(*model.Admin) error
 	GetAdminByUsername(string) (*model.Admin, error)
 }
 
@@ -40,16 +39,6 @@ func (u *AdminRepository) CreateAdmin(admin *model.Admin) error {
 	err := config.DBMysql.Save(&admin)
 	if err != nil {
 		return err.Error
-	}
-
-	return nil
-}
-
-func (u *AdminRepository) LoginAdmin(admin *model.Admin) error {
-	password := admin.ComparePassword(admin.Password)
-	err := config.DBMysql.Where("username = ? && password = ?", admin.Username, password).First(&admin).Error
-	if err != nil {
-		return err
 	}
 
 	return nil

@@ -13,9 +13,14 @@ import (
 func (m *Controller) GetAdmin(c echo.Context) error {
 	var admins []model.Admin
 
-	config.DBMysql.Find(&admins)
+	if err := config.DBMysql.Find(&admins).Error; err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 
-	return c.JSON(http.StatusOK, admins)
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "success get all admins",
+		"users":   admins,
+	})
 }
 
 func (m *Controller) CreateAdmin(c echo.Context) error {

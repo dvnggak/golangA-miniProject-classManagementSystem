@@ -1,10 +1,10 @@
 package utils
 
 import (
-	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/dvnggak/miniProject/constants"
 )
 
 func CreateToken(adminId uint, name string) (string, error) {
@@ -18,7 +18,7 @@ func CreateToken(adminId uint, name string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Sign and get the complete encoded token as a string
-	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_JWT")))
+	tokenString, err := token.SignedString([]byte(constants.SECRET_JWT))
 
 	if err != nil {
 		return "", err
