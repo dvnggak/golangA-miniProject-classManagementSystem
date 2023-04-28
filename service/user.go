@@ -1,12 +1,16 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/dvnggak/miniProject/config"
 	"github.com/dvnggak/miniProject/model"
+	"gorm.io/gorm"
 )
 
 type IUserService interface {
 	CreateUser(*model.User) error
+	GetUserByUsername(string) (*model.User, error)
 }
 
 type UserRepository struct {
@@ -38,4 +42,15 @@ func (u *UserRepository) CreateUser(user *model.User) error {
 	}
 
 	return nil
+}
+
+func (u *UserRepository) GetUserByUsername(username string) (*model.User, error) {
+	var user model.User
+	if err := config.DBMysql.Where("username = ?", username).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errors.New("admin not found")
+		}
+		return nil, err
+	}
+	return &user, nil
 }
