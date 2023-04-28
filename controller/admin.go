@@ -25,7 +25,7 @@ func (m *Controller) GetAdmin(c echo.Context) error {
 
 func (m *Controller) CreateAdmin(c echo.Context) error {
 	data := map[string]interface{}{
-		"message": "fail",
+		"message": "fail to create admin",
 	}
 	var admin model.Admin
 	err := c.Bind(&admin)
@@ -38,7 +38,7 @@ func (m *Controller) CreateAdmin(c echo.Context) error {
 		return err
 	}
 
-	data["message"] = "success"
+	data["message"] = "success to create admin"
 	return c.JSON(http.StatusOK, data)
 }
 
@@ -79,4 +79,79 @@ func (m *Controller) LoginAdmin(c echo.Context) error {
 
 	data["message"] = adminResponse
 	return c.JSON(http.StatusOK, data)
+}
+
+func (m *Controller) CreateClass(c echo.Context) error {
+	data := map[string]interface{}{
+		"message": "fail to create class",
+	}
+
+	var class model.Class
+	err := c.Bind(&class)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, data)
+	}
+
+	err = service.GetClassRepository().CreateClass(&class)
+	if err != nil {
+		return err
+	}
+
+	data["message"] = "success to create class"
+	return c.JSON(http.StatusOK, data)
+}
+
+func (m *Controller) GetClass(c echo.Context) error {
+	var classes []model.Class
+
+	if err := config.DBMysql.Find(&classes).Error; err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "success get all classes",
+		"classes": classes,
+	})
+}
+
+func (m *Controller) UpdateClass(c echo.Context) error {
+	code := c.Param("code")
+	var class model.Class
+
+	if err := config.DBMysql.Where("code = ?", code).First(&class).Error; err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if err := c.Bind(&class); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err := service.GetClassRepository().UpdateClass(&class)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "success update class",
+		"class":   class,
+	})
+}
+
+func (m *Controller) DeleteClass(c echo.Context) error {
+	code := c.Param("code")
+	var class model.Class
+
+	if err := config.DBMysql.Where("code = ?", code).First(&class).Error; err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err := service.GetClassRepository().DeleteClass(&class)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "success delete class",
+		"class":   class,
+	})
 }

@@ -24,7 +24,14 @@ func StartRoute() *echo.Echo {
 	eAuth := e.Group("/auth")
 	eAuth.Use(JWTMiddleware()) // JWT Middleware
 
+	// Admin routes
 	eAuth.GET("/admins", adminController.GetAdmin)
+	// Class routes
+	eAuth.POST("/admins/newClass", adminController.CreateClass)
+	eAuth.GET("/admins/classes", adminController.GetClass)
+	eAuth.PUT("/admins/classes/:code", adminController.UpdateClass)
+	eAuth.DELETE("/admins/classes/:code", adminController.DeleteClass)
+	// User routes
 	eAuth.GET("/users", userController.GetUser)
 
 	return e

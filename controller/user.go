@@ -10,9 +10,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type Controller struct {
-}
-
 func (m *Controller) GetUser(c echo.Context) error {
 
 	var users []model.User
