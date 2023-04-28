@@ -18,17 +18,21 @@ func StartRoute() *echo.Echo {
 	userController := controller.Controller{}
 	userGroup := e.Group("/users")
 	userGroup.POST("/", userController.CreateUser)
+	userGroup.POST("/login", userController.LoginUser)
 
 	// restricted group
 	eAuth := e.Group("/auth")
 	eAuth.Use(JWTMiddleware()) // JWT Middleware
 
 	eAuth.GET("/admins", adminController.GetAdmin)
-	// eAuth.GET("/users", userController.GetUser)
+	eAuth.GET("/users", userController.GetUser)
 
 	return e
 }
 
 func JWTMiddleware() echo.MiddlewareFunc {
-	return mid.JWT([]byte(constants.SECRET_JWT))
+	config := mid.JWTConfig{
+		SigningKey: []byte(constants.SECRET_JWT),
+	}
+	return mid.JWTWithConfig(config)
 }

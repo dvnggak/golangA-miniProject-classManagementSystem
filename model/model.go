@@ -54,6 +54,12 @@ type User struct {
 	ClassDetails []ClassDetail `gorm:"many2many:user_classes;"`
 }
 
+type UserResponse struct {
+	Username string `json:"username" form:"username"`
+	Message  string `json:"message" form:"message"`
+	Token    string `json:"token" form:"token"`
+}
+
 func (u *User) BeforeCreateUser(tx *gorm.DB) (err error) {
 	hashPassword, err := utils.HashPassword(u.Password)
 	if err != nil {

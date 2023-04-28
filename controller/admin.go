@@ -67,7 +67,7 @@ func (m *Controller) LoginAdmin(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, data)
 	}
 
-	token, err := utils.CreateToken(admin.ID, admin.Username)
+	token, err := utils.CreateTokenAdmin(admin.ID, admin.Username)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
 			"message": "failed to create token",
