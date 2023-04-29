@@ -78,3 +78,40 @@ func (m *Controller) LoginUser(c echo.Context) error {
 	data["message"] = userResponse
 	return c.JSON(http.StatusOK, data)
 }
+
+func (m *Controller) EnrollClass(c echo.Context) error {
+	// // fmt.Printf("Request Headers: %v\n", c.Request().Header)
+
+	data := map[string]interface{}{
+		"message": "fail to enroll class",
+	}
+	var enrollData struct {
+		Code         string `json:"code" validate:"required"`
+		UserIDNumber string `json:"id_number" validate:"required"`
+	}
+	err := c.Bind(&enrollData)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, data)
+	}
+
+	data["message"] = "process to enroll class"
+	// Get the class with the given code
+	class, err := service.GetUserRepository().GetClassByCode(enrollData.Code)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, data)
+	}
+
+	data["message"] = "checkEnroll "
+	// Check if the user with the given ID is already enrolled in the class
+	if service.GetUserRepository().CheckEnrolledClass(enrollData.UserIDNumber, class.ID) {
+		return c.JSON(http.StatusBadRequest, data)
+	}
+
+	// Enroll the user with the given ID to the class with the given ID
+	if err := service.GetUserRepository().EnrollClass(enrollData.UserIDNumber, class.ID); err != nil {
+		return c.JSON(http.StatusBadRequest, data)
+	}
+
+	data["message"] = "success"
+	return c.JSON(http.StatusOK, data)
+}
