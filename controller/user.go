@@ -148,6 +148,50 @@ func (m *Controller) EnrollClass(c echo.Context) error {
 	})
 }
 
+func (m *Controller) UnenrollClass(c echo.Context) error {
+	// Get the class code from the URL parameter
+	classCode := c.Param("code")
+
+	// Get the JWT token from the request header
+	tokenString := c.Request().Header.Get("Authorization")
+	if tokenString == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": "Authorization token is missing",
+		})
+	}
+	tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
+
+	// Parse the JWT token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(constants.SECRET_JWT), nil
+	})
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": "Invalid authorization token",
+		})
+	}
+
+	// Extract the id_number field from the token claims
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": "Invalid authorization token",
+		})
+	}
+	userID := claims["id_number"].(string)
+
+	// Unenroll the user from the class
+	err = service.GetUserRepository().UnenrollUserFromClass(classCode, userID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": err.Error(),
+		})
+	}
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "User has been unenrolled from the class",
+	})
+}
+
 func (m *Controller) GetEnrolledClasses(c echo.Context) error {
 	userID := c.Param("id_number")
 

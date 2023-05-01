@@ -38,6 +38,7 @@ func StartRoute() *echo.Echo {
 	eAuth.GET("/users", userController.GetUser)
 	// User enroll class
 	eAuth.POST("/users/enroll/:code", userController.EnrollClass)
+	eAuth.DELETE("/users/unenroll/:code", userController.UnenrollClass)
 	// User get enrolled class
 	eAuth.GET("/users/:id_number/classes", userController.GetEnrolledClasses)
 

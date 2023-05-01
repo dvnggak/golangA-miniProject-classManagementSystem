@@ -15,6 +15,7 @@ type IUserService interface {
 	CheckEnrolledClass(string, string) bool
 	EnrollClass(string, string) error
 	GetEnrolledClasses(string) ([]model.Class, error)
+	UnenrollUserFromClass(string, string) error
 }
 
 type UserRepository struct {
@@ -117,6 +118,29 @@ func (r *UserRepository) EnrollClass(id_number string, classCode string) error {
 	return nil
 }
 
+func (r *UserRepository) UnenrollUserFromClass(classCode string, userID string) error {
+	// Find the class with the specified code
+	class, err := r.GetClassByCode(classCode)
+	if err != nil {
+		return err
+	}
+
+	// Check if the user is enrolled in the class
+	if !r.CheckEnrolledClass(userID, classCode) {
+		return errors.New("user is not enrolled in this class")
+	}
+
+	// Delete the user from the class's enrolled users
+	for i, user := range class.Enrolled {
+		if user.ID_number == userID {
+			class.Enrolled = append(class.Enrolled[:i], class.Enrolled[i+1:]...)
+			break
+		}
+	}
+
+	return config.DBMysql.Save(&class).Error
+
+}
 func (r *UserRepository) GetEnrolledClasses(userID string) ([]model.Class, error) {
 	var user model.User
 	if err := config.DBMysql.Preload("Enrolled").First(&user, "id_number = ?", userID).Error; err != nil {
