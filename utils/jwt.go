@@ -27,10 +27,11 @@ func CreateTokenAdmin(adminId uint, name string) (string, error) {
 	return tokenString, nil
 }
 
-func CreateTokenUser(userId uint, name string) (string, error) {
+func CreateTokenUser(userId uint, name string, ID_Number string) (string, error) {
 	// create the claims
 	claims := jwt.MapClaims{}
 	claims["user_id"] = userId
+	claims["id_number"] = ID_Number
 	claims["name"] = name
 	claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
 
