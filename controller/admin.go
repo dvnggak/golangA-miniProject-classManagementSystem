@@ -92,6 +92,17 @@ func (m *Controller) CreateClass(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, data)
 	}
 
+	// Shorten the URL using the Bitly API
+	shortURL, err := utils.ShortenURL(class.Link_group)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": "failed to shorten url",
+			"error":   err.Error(),
+		})
+	}
+
+	class.Link_group = shortURL
+
 	err = service.GetClassRepository().CreateClass(&class)
 	if err != nil {
 		return err
