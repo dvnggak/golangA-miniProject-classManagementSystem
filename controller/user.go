@@ -1,9 +1,13 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/dvnggak/miniProject/config"
+	"github.com/dvnggak/miniProject/constants"
 	"github.com/dvnggak/miniProject/model"
 	"github.com/dvnggak/miniProject/service"
 	"github.com/dvnggak/miniProject/utils"
@@ -69,7 +73,7 @@ func (m *Controller) LoginUser(c echo.Context) error {
 	}
 
 	// Generate a JWT token
-	token, err := utils.CreateTokenUser(user.ID, user.Username)
+	token, err := utils.CreateTokenUser(user.ID, user.Username, user.ID_number)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, data)
 	}
@@ -80,38 +84,81 @@ func (m *Controller) LoginUser(c echo.Context) error {
 }
 
 func (m *Controller) EnrollClass(c echo.Context) error {
-	// // fmt.Printf("Request Headers: %v\n", c.Request().Header)
+	// Get the class code from the URL parameter
+	classCode := c.Param("code")
 
-	data := map[string]interface{}{
-		"message": "fail to enroll class",
+	// Get the JWT token from the request header
+	tokenString := c.Request().Header.Get("Authorization")
+	if tokenString == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": "Authorization token is missing",
+		})
 	}
-	var enrollData struct {
-		Code         string `json:"code" validate:"required"`
-		UserIDNumber string `json:"id_number" validate:"required"`
-	}
-	err := c.Bind(&enrollData)
+	tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
+
+	// Parse the JWT token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(constants.SECRET_JWT), nil
+	})
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, data)
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": "Invalid authorization token",
+		})
 	}
 
-	data["message"] = "process to enroll class"
-	// Get the class with the given code
-	class, err := service.GetUserRepository().GetClassByCode(enrollData.Code)
+	// Extract the id_number field from the token claims
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": "Invalid authorization token",
+		})
+	}
+	userID := claims["id_number"].(string)
+
+	// Get the user repository instance
+	userRepo := service.GetUserRepository()
+
+	// Get the class by code
+	class, err := userRepo.GetClassByCode(classCode)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, data)
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Invalid class code",
+		})
 	}
 
-	data["message"] = "checkEnroll "
-	// Check if the user with the given ID is already enrolled in the class
-	if service.GetUserRepository().CheckEnrolledClass(enrollData.UserIDNumber, class.ID) {
-		return c.JSON(http.StatusBadRequest, data)
+	fmt.Println(class)
+
+	// Check if the user is already enrolled in the class
+	if userRepo.CheckEnrolledClass(userID, classCode) {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "User is already enrolled in this class",
+		})
 	}
 
-	// Enroll the user with the given ID to the class with the given ID
-	if err := service.GetUserRepository().EnrollClass(enrollData.UserIDNumber, class.ID); err != nil {
-		return c.JSON(http.StatusBadRequest, data)
+	// Enroll the user in the class
+	err = userRepo.EnrollClass(userID, classCode)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to enroll user in class",
+		})
 	}
 
-	data["message"] = "success"
-	return c.JSON(http.StatusOK, data)
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "User enrolled in class successfully",
+	})
+}
+
+func (m *Controller) GetEnrolledClasses(c echo.Context) error {
+	userID := c.Param("id_number")
+
+	userRepo := service.GetUserRepository()
+	classes, err := userRepo.GetEnrolledClasses(userID)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to get enrolled classes",
+		})
+	}
+
+	return c.JSON(http.StatusOK, classes)
 }

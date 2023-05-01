@@ -10,7 +10,6 @@ func InitMigrate() {
 	config.DBMysql.AutoMigrate(&User{})
 	config.DBMysql.AutoMigrate(&Admin{})
 	config.DBMysql.AutoMigrate(&Class{})
-	// config.DBMysql.AutoMigrate(&ClassDetail{})
 }
 
 type Class struct {
@@ -26,12 +25,6 @@ type Class struct {
 	Enrolled      []*User `gorm:"many2many:user_classes;"`
 }
 
-// type ClassDetail struct {
-// 	gorm.Model
-// 	ClassCode string `json:"class_code" form:"class_code"` // foreign key reference to Class Code
-// 	Users     []User `gorm:"many2many:class_details;"`
-// }
-
 type Admin struct {
 	gorm.Model
 	Username string `form:"username" json:"username"`
@@ -46,7 +39,7 @@ type AdminResponse struct {
 
 type User struct {
 	gorm.Model
-	ID_number int     `form:"id_number" json:"id_number"`
+	ID_number string  `form:"id_number" json:"id_number"`
 	Name      string  `form:"name" json:"name"`
 	Type      string  `form:"type" json:"type"`
 	Email     string  `form:"email" json:"email"`

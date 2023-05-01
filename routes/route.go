@@ -26,6 +26,7 @@ func StartRoute() *echo.Echo {
 
 	// Admin routes
 	eAuth.GET("/admins", adminController.GetAdmin)
+
 	// Class routes
 	eAuth.POST("/admins/newClass", adminController.CreateClass)
 	eAuth.GET("/admins/classes", adminController.GetClass)
@@ -36,6 +37,8 @@ func StartRoute() *echo.Echo {
 	eAuth.GET("/users", userController.GetUser)
 	// User enroll class
 	eAuth.POST("/users/enroll/:code", userController.EnrollClass)
+	// User get enrolled class
+	eAuth.GET("/users/:id_number/classes", userController.GetEnrolledClasses)
 
 	return e
 }

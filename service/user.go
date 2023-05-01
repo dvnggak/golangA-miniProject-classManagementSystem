@@ -12,8 +12,9 @@ type IUserService interface {
 	CreateUser(*model.User) error
 	GetUserByUsername(string) (*model.User, error)
 	GetClassByCode(string) (*model.Class, error)
-	CheckEnrolledClass(string, uint) bool
-	EnrollClass(string, uint) error
+	CheckEnrolledClass(string, string) bool
+	EnrollClass(string, string) error
+	GetEnrolledClasses(string) ([]model.Class, error)
 }
 
 type UserRepository struct {
@@ -69,31 +70,58 @@ func (r *UserRepository) GetClassByCode(code string) (*model.Class, error) {
 }
 
 // CheckEnrolledClass checks if the user with the given ID is already enrolled in the class with the given ID
-func (r *UserRepository) CheckEnrolledClass(id_number string, classID uint) bool {
-	var user model.User
-	var class model.Class
-
-	config.DBMysql.Model(&user).Where("id_number = ?", id_number).Preload("Enrolled", "id = ?", classID).Find(&user)
-	config.DBMysql.Model(&class).Where("id = ?", classID).Preload("Enrolled", "id_number = ?", id_number).Find(&class)
-
-	return len(user.Enrolled) > 0 && len(class.Enrolled) > 0
+func (r *UserRepository) CheckEnrolledClass(id_number string, classCode string) bool {
+	user := &model.User{}
+	result := config.DBMysql.Preload("Enrolled", "code = ?", classCode).Where("id_number = ?", id_number).First(user)
+	if result.Error != nil {
+		return false
+	}
+	return len(user.Enrolled) > 0
 }
 
 // EnrollClass enrolls the user with the given ID to the class with the given ID
-func (r *UserRepository) EnrollClass(id_number string, classID uint) error {
+func (r *UserRepository) EnrollClass(id_number string, classCode string) error {
+	// Get the user by ID number
 	var user model.User
-	var class model.Class
-
 	if err := config.DBMysql.Where("id_number = ?", id_number).First(&user).Error; err != nil {
 		return err
 	}
-	if err := config.DBMysql.Where("id = ?", classID).First(&class).Error; err != nil {
+
+	// Get the class by code
+	var class model.Class
+	if err := config.DBMysql.Where("code = ?", classCode).Preload("Enrolled").First(&class).Error; err != nil {
 		return err
 	}
 
-	err := config.DBMysql.Model(&user).Association("Enrolled").Append(&class)
-	if err != nil {
+	// Check if the user is already enrolled in the class
+	for _, c := range user.Enrolled {
+		if c.Code == classCode {
+			return errors.New("user is already enrolled in this class")
+		}
+	}
+
+	// Append the class to the user's enrolled classes
+	user.Enrolled = append(user.Enrolled, class)
+
+	// Append the user to the class's enrolled users
+	class.Enrolled = append(class.Enrolled, &user)
+
+	// Save the changes to the database
+	if err := config.DBMysql.Save(&user).Error; err != nil {
 		return err
 	}
+	if err := config.DBMysql.Save(&class).Error; err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func (r *UserRepository) GetEnrolledClasses(userID string) ([]model.Class, error) {
+	var user model.User
+	if err := config.DBMysql.Preload("Enrolled").First(&user, "id_number = ?", userID).Error; err != nil {
+		return nil, err
+	}
+
+	return user.Enrolled, nil
 }
