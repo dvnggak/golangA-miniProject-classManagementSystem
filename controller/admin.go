@@ -166,3 +166,12 @@ func (m *Controller) DeleteClass(c echo.Context) error {
 		"class":   class,
 	})
 }
+
+func (m *Controller) GetEnrolledUsers(c echo.Context) error {
+	code := c.Param("code")
+	users, err := service.GetAdminRepository().GetEnrolledUsersByClassCode(code)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusOK, users)
+}

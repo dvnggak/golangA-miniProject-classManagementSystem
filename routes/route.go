@@ -32,6 +32,7 @@ func StartRoute() *echo.Echo {
 	eAuth.GET("/admins/classes", adminController.GetClass)
 	eAuth.PUT("/admins/classes/:code", adminController.UpdateClass)
 	eAuth.DELETE("/admins/classes/:code", adminController.DeleteClass)
+	eAuth.GET("/admins/classes/:code/users", adminController.GetEnrolledUsers)
 
 	// User routes
 	eAuth.GET("/users", userController.GetUser)
