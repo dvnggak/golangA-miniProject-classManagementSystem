@@ -11,6 +11,7 @@ import (
 type IAdminService interface {
 	CreateAdmin(*model.Admin) error
 	GetAdminByUsername(string) (*model.Admin, error)
+	GetEnrolledUsersByClassCode(string) ([]*model.User, error)
 }
 
 type AdminRepository struct {
@@ -53,4 +54,15 @@ func (u *AdminRepository) GetAdminByUsername(username string) (*model.Admin, err
 		return nil, err
 	}
 	return &admin, nil
+}
+
+func (r *AdminRepository) GetEnrolledUsersByClassCode(code string) ([]*model.User, error) {
+	var users []*model.User
+	err := config.DBMysql.Joins("JOIN user_classes ON user_classes.user_id = users.id").
+		Where("user_classes.class_code = ?", code).
+		Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
 }
