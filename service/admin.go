@@ -12,6 +12,7 @@ type IAdminService interface {
 	CreateAdmin(*model.Admin) error
 	GetAdminByUsername(string) (*model.Admin, error)
 	GetEnrolledUsersByClassCode(string) ([]*model.User, error)
+	DeleteAdmin(uint) error
 }
 
 type AdminRepository struct {
@@ -65,4 +66,13 @@ func (r *AdminRepository) GetEnrolledUsersByClassCode(code string) ([]*model.Use
 		return nil, err
 	}
 	return users, nil
+}
+
+func (r *AdminRepository) DeleteAdmin(id uint) error {
+	var admin model.Admin
+	err := config.DBMysql.Where("id = ?", id).Delete(&admin).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
