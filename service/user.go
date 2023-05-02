@@ -119,26 +119,39 @@ func (r *UserRepository) EnrollClass(id_number string, classCode string) error {
 }
 
 func (r *UserRepository) UnenrollUserFromClass(classCode string, userID string) error {
-	// Find the class with the specified code
-	class, err := r.GetClassByCode(classCode)
-	if err != nil {
+	// Get the user by ID number
+	var user model.User
+	if err := config.DBMysql.Where("id_number = ?", userID).First(&user).Error; err != nil {
 		return err
 	}
 
+	// Get the class by code
+	var class model.Class
+	if err := config.DBMysql.Where("code = ?", classCode).Preload("Enrolled").First(&class).Error; err != nil {
+		return err
+	}
 	// Check if the user is enrolled in the class
 	if !r.CheckEnrolledClass(userID, classCode) {
 		return errors.New("user is not enrolled in this class")
 	}
 
-	// Delete the user from the class's enrolled users
-	for i, user := range class.Enrolled {
-		if user.ID_number == userID {
+	// Remove the user from the class's enrolled users
+	for i, u := range class.Enrolled {
+		if u.ID_number == user.ID_number {
 			class.Enrolled = append(class.Enrolled[:i], class.Enrolled[i+1:]...)
 			break
 		}
 	}
 
-	return config.DBMysql.Save(&class).Error
+	// Save the changes to the database
+	if err := config.DBMysql.Save(&user).Error; err != nil {
+		return err
+	}
+	if err := config.DBMysql.Save(&class).Error; err != nil {
+		return err
+	}
+
+	return nil
 
 }
 func (r *UserRepository) GetEnrolledClasses(userID string) ([]model.Class, error) {
