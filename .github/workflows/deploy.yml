@@ -21,7 +21,7 @@ jobs:
           port: 22
           script: |
             export PATH=$PATH:/usr/local/go/bin
-            cd miniproject
+            cd miniProject
             git pull
             sudo docker build -t go-miniproject-devangga .
             sudo docker stop go-miniproject-devangga
