@@ -4,11 +4,10 @@ import (
 	"github.com/dvnggak/miniProject/config"
 	"github.com/dvnggak/miniProject/model"
 	"github.com/dvnggak/miniProject/routes"
-	"github.com/joho/godotenv"
 )
 
 func init() {
-	godotenv.Load(".env")
+	// godotenv.Load(".env")
 	config.InitDB()
 	model.InitMigrate()
 }
