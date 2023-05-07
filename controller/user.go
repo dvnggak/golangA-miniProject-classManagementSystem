@@ -106,7 +106,7 @@ func (m *Controller) EnrollClass(c echo.Context) error {
 		})
 	}
 
-	// Extract the id_number field from the token claims
+	// Extract the id_number & role field from the token claims
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
 		return c.JSON(http.StatusUnauthorized, map[string]string{
@@ -114,6 +114,14 @@ func (m *Controller) EnrollClass(c echo.Context) error {
 		})
 	}
 	userID := claims["id_number"].(string)
+	role := claims["role"].(string)
+
+	// Check if the user is an admin
+	if role != "user" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": "Only user can enroll in a class",
+		})
+	}
 
 	// Get the user repository instance
 	userRepo := service.GetUserRepository()
@@ -150,6 +158,41 @@ func (m *Controller) EnrollClass(c echo.Context) error {
 
 func (m *Controller) GetEnrolledClasses(c echo.Context) error {
 	userID := c.Param("id_number")
+
+	// Get the JWT token from the request header
+	tokenString := c.Request().Header.Get("Authorization")
+	if tokenString == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": "Authorization token is missing",
+		})
+	}
+	tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
+
+	// Parse the JWT token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(constants.SECRET_JWT), nil
+	})
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": "Invalid authorization token",
+		})
+	}
+
+	// Extract the id_number & role field from the token claims
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": "Invalid authorization token",
+		})
+	}
+	role := claims["role"].(string)
+
+	// Check if the user is an admin
+	if role != "user" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": "Only user can get enrolled classes",
+		})
+	}
 
 	userRepo := service.GetUserRepository()
 	classes, err := userRepo.GetEnrolledClasses(userID)
