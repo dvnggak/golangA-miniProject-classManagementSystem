@@ -20,7 +20,6 @@ func InitDB() {
 	dbName := os.Getenv("DB_DB")
 
 	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", dbUsername, dbPassword, dbHost, dbPort, dbName)
-	fmt.Println("connection mysql:", connectionString)
 	DBMysql, err = gorm.Open(mysql.Open(connectionString), &gorm.Config{})
 	if err != nil {
 		panic(err)

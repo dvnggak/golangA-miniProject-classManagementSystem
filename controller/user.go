@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -127,14 +126,12 @@ func (m *Controller) EnrollClass(c echo.Context) error {
 	userRepo := service.GetUserRepository()
 
 	// Get the class by code
-	class, err := userRepo.GetClassByCode(classCode)
+	_, err = userRepo.GetClassByCode(classCode)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "Invalid class code",
 		})
 	}
-
-	fmt.Println(class)
 
 	// Check if the user is already enrolled in the class
 	if userRepo.CheckEnrolledClass(userID, classCode) {
