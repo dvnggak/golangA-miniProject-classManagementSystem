@@ -7,7 +7,6 @@ import (
 )
 
 func init() {
-	// godotenv.Load(".env")
 	config.InitDB()
 	model.InitMigrate()
 }

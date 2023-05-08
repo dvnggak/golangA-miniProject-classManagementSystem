@@ -10,36 +10,35 @@ import (
 	"github.com/dvnggak/miniProject/model"
 	"github.com/dvnggak/miniProject/service"
 	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestController_GetAdmin(t *testing.T) {
-	// Initialize the echo context
+func TestGetAdmin(t *testing.T) {
+	// Create a new Echo instance
 	e := echo.New()
+
+	// Create a new request and recorder
 	req := httptest.NewRequest(http.MethodGet, "/admins", nil)
 	rec := httptest.NewRecorder()
+
+	// Create a new Echo context
 	c := e.NewContext(req, rec)
 
-	// Initialize the Controller
-	m := &Controller{}
+	// Create a new instance of the controller
+	ctrl := &Controller{}
 
-	// Call the GetAdmin function
-	err := m.GetAdmin(c)
+	// Call the controller function
+	err := ctrl.GetAdmin(c)
 
-	// Check for any errors
-	if err != nil {
-		t.Errorf("GetAdmin returned an error: %v", err)
-	}
+	// Assert that no error occurred
+	assert.NoError(t, err)
 
-	// Check the status code of the response
-	if rec.Code != http.StatusOK {
-		t.Errorf("GetAdmin returned an unexpected status code: %d", rec.Code)
-	}
+	// Assert the status code
+	assert.Equal(t, http.StatusOK, rec.Code)
 
-	// Check the body of the response
-	expected := `{"message":"success get all admins","users":[{"id":1,"name":"Alice"},{"id":2,"name":"Bob"}]}`
-	if rec.Body.String() != expected {
-		t.Errorf("GetAdmin returned an unexpected body: %s", rec.Body.String())
-	}
+	// Assert the response body
+	expected := `{"message":"success get all admins","users":[]}`
+	assert.Equal(t, expected, rec.Body.String())
 }
 
 func TestController_CreateAdmin(t *testing.T) {

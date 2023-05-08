@@ -7,28 +7,17 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
-
-	"github.com/joho/godotenv"
 )
 
 type BitlyResponse struct {
 	Link string `json:"link"`
 }
 
-func init() {
-	// Load the .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-}
-
 func ShortenURL(longURL string) (string, error) {
 	// Set up a client for the Bitly API
 	client := &http.Client{}
 	baseURL := "https://api-ssl.bitly.com/v4/shorten"
-	apiKey := os.Getenv("BITLY_API_KEY")
+	apiKey := "84d3b40d1b208f80ad0114d19d2a2bc654810cc1"
 
 	authToken := fmt.Sprintf("Bearer %s", apiKey)
 
